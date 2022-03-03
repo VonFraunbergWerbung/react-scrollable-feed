@@ -9,7 +9,7 @@ export type ScrollableFeedProps = {
   changeDetectionFilter?: (previousProps: ScrollableFeedComponentProps, newProps: ScrollableFeedComponentProps) => boolean;
   viewableDetectionEpsilon?: number;
   className?: string;
-  onScroll?: (isAtBottom: boolean) => void;
+  onScroll?: (isAtBottom: object) => void;
 }
 
 type ScrollableFeedComponentProps = Readonly<{ children?: ReactNode }> & Readonly<ScrollableFeedProps>;
@@ -115,7 +115,8 @@ class ScrollableFeed extends React.Component<ScrollableFeedProps> {
     const { viewableDetectionEpsilon, onScroll } = this.props;
     if (onScroll && this.bottomRef.current && this.wrapperRef.current) {
       const isAtBottom = ScrollableFeed.isViewable(this.wrapperRef.current, this.bottomRef.current, viewableDetectionEpsilon!);
-      onScroll(isAtBottom);
+      const isAtTop = !!!this.wrapperRef?.current?.scrollTop;
+      onScroll({isAtBottom, isAtTop});
     }
   }
 

@@ -10,6 +10,8 @@ export type ScrollableFeedProps = {
   viewableDetectionEpsilon?: number;
   className?: string;
   onScroll?: (isAtBottom: object) => void;
+  //custom
+  onMount?: (wrapper: React.RefObject<HTMLDivElement>) => void;
 }
 
 type ScrollableFeedComponentProps = Readonly<{ children?: ReactNode }> & Readonly<ScrollableFeedProps>;
@@ -23,6 +25,9 @@ class ScrollableFeed extends React.Component<ScrollableFeedProps> {
     this.bottomRef = React.createRef();
     this.wrapperRef = React.createRef();
     this.handleScroll = this.handleScroll.bind(this);
+
+    //custom
+    this.handleMount = this.handleMount.bind(this);
   }
 
   static defaultProps: ScrollableFeedProps = {
@@ -55,12 +60,16 @@ class ScrollableFeed extends React.Component<ScrollableFeedProps> {
     if (isValidChange && (forceScroll || snapshot) && this.bottomRef.current && this.wrapperRef.current) {
       this.scrollParentToChild(this.wrapperRef.current, this.bottomRef.current);
     }
+    //custom
+    this.handleMount();
   }
 
   componentDidMount(): void {
     //Scroll to bottom from the start
     if (this.bottomRef.current && this.wrapperRef.current) {
       this.scrollParentToChild(this.wrapperRef.current, this.bottomRef.current);
+      //custom
+      this.handleMount();
     }
   }
 
@@ -78,6 +87,7 @@ class ScrollableFeed extends React.Component<ScrollableFeedProps> {
 
       //Scroll by offset relative to parent
       const scrollOffset = (childRect.top + parent.scrollTop) - parentRect.top;
+
       const { animateScroll, onScrollComplete } = this.props;
       if (animateScroll) {
         animateScroll(parent, scrollOffset);
@@ -116,7 +126,20 @@ class ScrollableFeed extends React.Component<ScrollableFeedProps> {
     if (onScroll && this.bottomRef.current && this.wrapperRef.current) {
       const isAtBottom = ScrollableFeed.isViewable(this.wrapperRef.current, this.bottomRef.current, viewableDetectionEpsilon!);
       const isAtTop = !!!this.wrapperRef?.current?.scrollTop;
-      onScroll({isAtBottom, isAtTop});
+
+      onScroll({isAtBottom, isAtTop, firstChild: this.wrapperRef?.current?.firstChild});
+    }
+  }
+
+  /**
+   * CUSTOM
+   * gets triggerd on Mount and Update to give direct access in HOCs to the wrapperRef
+   */
+  protected handleMount(): void {
+    const {onMount} = this.props;
+    const wrapper = this.wrapperRef;
+    if(onMount && wrapper){
+      onMount(wrapper);
     }
   }
 
